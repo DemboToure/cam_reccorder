@@ -84,7 +84,7 @@ class SMWindow(QMainWindow):
         # hahahahaha
 
         cam_1 = camWidget(0, "CAM 1", self.width/2, self.height/2, self)
-        cam_2 = camWidget(1, "CAM 2", self.width/2, self.height/2, self)
+        cam_2 = camWidget(None, "CAM 2", self.width/2, self.height/2, self)
         cam_3 = camWidget(None, "CAM 3", self.width/2, self.height/2, self)
         cam_4 = camWidget(None, "CAM 4", self.width/2, self.height/2, self)
         grid = QGridLayout()
