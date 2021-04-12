@@ -5,13 +5,15 @@ from PyQt5.QtGui import QIcon, QFont, QPalette, QImage, QPixmap
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from video_utils.video_utils import VideoThread
 class camWidget(QWidget):
-    def __init__(self, index, title, width, height):
+
+    def __init__(self, index, title, width, height, smwindow):
         super().__init__()
         self.title = title
         self.width = width
         self.height = height
         self.index  = index
         self.resize(self.width, self.height)
+        smwindow.stop_rec.connect(self.stop_reccord)
         self.initUI()
 
     def initUI(self):
@@ -29,23 +31,31 @@ class camWidget(QWidget):
     @pyqtSlot(QImage)
     def setImage(self, image):
         video = QPixmap.fromImage(image)
-        #video.resize(self.width, self.height)
         video = video.scaledToHeight(self.height)
         video = video.scaledToWidth(self.width)
         self.label.setPixmap(video)
-        #self.label.setScaledContents(true)
+    
+    @pyqtSlot(bool)
+    def stop_reccord(self, state):
+        logger.debug("Stop Reccord....")
+        return None
 
 
 
 
 
 class SMWindow(QMainWindow):
+    stop_rec = pyqtSignal(bool)
+
     def __init__(self, width, height):
         super().__init__()
         self.width = width
         self.height = height
         self.initUI()
 
+
+    def stop_reccord():
+        self.stop_rec.emit(True)
 
     def initUI(self):
         QToolTip.setFont(QFont('Sans-Serif', 10))
@@ -60,10 +70,15 @@ class SMWindow(QMainWindow):
         config = menu_bar.addMenu('Config')
         about = menu_bar.addMenu('About?')
 
-        cam_1 = camWidget(0, "CAM 1", self.width/2, self.height/2)
-        cam_2 = camWidget(None, "CAM 2", self.width/2, self.height/2)
-        cam_3 = camWidget(None, "CAM 3", self.width/2, self.height/2)
-        cam_4 = camWidget(None, "CAM 4", self.width/2, self.height/2)
+        # add event to call stop_reccord function
+        # stop reccord send signal to all CamWidget connected 
+        # CamWidget send signal to VideoThread to stop reccord 
+        # hahahahaha
+
+        cam_1 = camWidget(0, "CAM 1", self.width/2, self.height/2, self)
+        cam_2 = camWidget(None, "CAM 2", self.width/2, self.height/2, self)
+        cam_3 = camWidget(None, "CAM 3", self.width/2, self.height/2, self)
+        cam_4 = camWidget(None, "CAM 4", self.width/2, self.height/2, self)
         grid = QGridLayout()
         #grid.setSpacing(1)
         grid.addWidget(cam_1, 1, 1)
