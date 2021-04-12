@@ -5,7 +5,7 @@ import sys
 from PyQt5.QtWidgets import QWidget, QLabel, QApplication
 from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
-from utils.utils import get_datetime_str
+from utils.utils import get_datetime_str, get_datetime_now
 from video_utils import video_utils 
 
 
@@ -79,36 +79,53 @@ class VideoThread(QThread):
     
     def __init__(self, cam):
         super().__init__()
+        self.parent = self
         self.index = cam.index
         self.width = cam.width
         self.height= cam.height
+        self.reccord_state = True
+        cam.stop_rec.connect(self.stop_reccord)
     
+    @pyqtSlot(bool)
+    def stop_reccord(self, state):
+        self.reccord_state = not state
+        
+
     def capture_video(self):
         logger.debug('launche capture for CAM {}'.format(self.index))
         cap = cv2.VideoCapture(self.index)
         logger.debug('start capture for CAM => {}'.format(self.index) )
         # Define the codec and create VideoWriter object
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        output_path = 'output/'+get_datetime_str()+'cam_'+str(self.index)+'.avi'
-        out = cv2.VideoWriter(output_path,fourcc, 20.0, (int(self.width),int(self.height)))
-        while(cap.isOpened()):
+        output_path = 'output/'+get_datetime_str()+'.avi'
+        out = cv2.VideoWriter(output_path,fourcc, 20.0, (640,480))
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        while(cap.isOpened() and self.reccord_state):
             ret, frame = cap.read()
             if ret:
+                frame = cv2.putText(frame, get_datetime_now(), (10, 17), font, 1/2, (0, 0, 255), 2, cv2.LINE_4)
                 out.write(frame)
                 rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 h, w, ch = rgbImage.shape
                 bytesPerLine = ch * w
                 convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
-                p = convertToQtFormat.scaled(self.width, self.height, Qt.KeepAspectRatio)
+                #p = convertToQtFormat.scaled(self.width, self.height, Qt.KeepAspectRatio)
+                p = convertToQtFormat.scaled(self.width, self.height)
                 self.changePixmap.emit(p)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
             else:
                 break
+        logger.debug('stop capture for CAM => {}'.format(self.index) )
+        
+        convertToQtFormat = QImage('source_data/cam.png')
+        p = convertToQtFormat.scaled(self.width, self.height, Qt.KeepAspectRatio)
+        self.changePixmap.emit(p)
         # Release everything if job is finished
         cap.release()
         out.release()
         cv2.destroyAllWindows()
+        logger.debug('Free momory usage')
 
     def run(self):
         self.capture_video()

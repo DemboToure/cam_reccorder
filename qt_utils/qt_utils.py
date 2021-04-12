@@ -1,10 +1,11 @@
 import sys
 from logger.log import logger
-from PyQt5.QtWidgets import QApplication, QWidget, QToolTip, QPushButton, QMainWindow, QGridLayout, QPushButton, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QToolTip, QPushButton, QMainWindow, QGridLayout, QPushButton, QLabel, QHBoxLayout, QMenu, QAction
 from PyQt5.QtGui import QIcon, QFont, QPalette, QImage, QPixmap
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from video_utils.video_utils import VideoThread
 class camWidget(QWidget):
+    stop_rec = pyqtSignal(bool)
 
     def __init__(self, index, title, width, height, smwindow):
         super().__init__()
@@ -38,7 +39,7 @@ class camWidget(QWidget):
     @pyqtSlot(bool)
     def stop_reccord(self, state):
         logger.debug("Stop Reccord....")
-        return None
+        self.stop_rec.emit(True)
 
 
 
@@ -54,7 +55,7 @@ class SMWindow(QMainWindow):
         self.initUI()
 
 
-    def stop_reccord():
+    def stop_reccord(self):
         self.stop_rec.emit(True)
 
     def initUI(self):
@@ -68,7 +69,14 @@ class SMWindow(QMainWindow):
         menu_bar = self.menuBar()
         config = menu_bar.addMenu('File')
         config = menu_bar.addMenu('Config')
-        about = menu_bar.addMenu('About?')
+        about  = menu_bar.addMenu('About?')
+        exit   = QMenu('Exit', self)
+        exitBtn= QAction('Exit', self)
+        exitBtn.triggered.connect(self.stop_reccord)
+        exit.addAction(exitBtn)
+        
+        menu_bar.addMenu(exit)
+
 
         # add event to call stop_reccord function
         # stop reccord send signal to all CamWidget connected 
@@ -76,7 +84,7 @@ class SMWindow(QMainWindow):
         # hahahahaha
 
         cam_1 = camWidget(0, "CAM 1", self.width/2, self.height/2, self)
-        cam_2 = camWidget(None, "CAM 2", self.width/2, self.height/2, self)
+        cam_2 = camWidget(1, "CAM 2", self.width/2, self.height/2, self)
         cam_3 = camWidget(None, "CAM 3", self.width/2, self.height/2, self)
         cam_4 = camWidget(None, "CAM 4", self.width/2, self.height/2, self)
         grid = QGridLayout()

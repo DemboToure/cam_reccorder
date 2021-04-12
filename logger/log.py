@@ -3,8 +3,8 @@ from loguru import logger
 
 log_format = [
     '{time: YYYY-MM-DD hh:mm:ss}',
-    '{file: <10}',
-    '{function: <10}',
+    '{file: <15}',
+    '{function: <15}',
     '{line: 03d}',
     '<R>{level: ^10}</R>',
     '{message}'
